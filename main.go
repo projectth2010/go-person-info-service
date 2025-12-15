@@ -1,24 +1,63 @@
+// main.go
 package main
 
 import (
-	"go-person-info-service/config"
-	_ "go-person-info-service/docs"
-	"go-person-info-service/routes"
+    "log"
+    "os"
+    "time"
 
-	 "github.com/gin-gonic/gin"
-    "github.com/swaggo/gin-swagger"
-    "github.com/swaggo/files"
+    "github.com/joho/godotenv"
+    "github.com/gin-gonic/gin"
+    swaggerFiles "github.com/swaggo/files"
+    ginSwagger "github.com/swaggo/gin-swagger"
+    "go-person-info-service/config"
+    "go-person-info-service/middleware"
+    "go-person-info-service/routes"
 )
 
+// @title Person Information Service API
+// @version 1.0
+// @description A RESTful API for managing person information with authentication
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
-	r := gin.Default()
+    // Load .env file
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found, using environment variables")
+    }
 
-	config.ConnectDB()
+    // Initialize Gin
+    app := gin.Default()
 
-	routes.UserRoutes(r)
+    // Middleware
+    app.Use(gin.Logger())
+    app.Use(gin.Recovery())
+    app.Use(middleware.CORSMiddleware())
 
-	// Swagger
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+    // Connect to database
+    if err := config.ConnectDB(); err != nil {
+        log.Fatalf("Failed to connect to database: %v", err)
+    }
 
-	r.Run(":8080")
+    // Setup routes
+    routes.SetupRoutes(app)
+
+    // Swagger documentation
+    if os.Getenv("ENABLE_SWAGGER") != "false" {
+        app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+    }
+
+    // Start server
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8080"
+    }
+
+    log.Printf("Server starting on port %s...", port)
+    if err := app.Run(":" + port); err != nil {
+        log.Fatalf("Failed to start server: %v", err)
+    }
 }
