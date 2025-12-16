@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"context"
-	"crypto/sha256"
-	"errors"
+	"os"
+
+	// "crypto/sha256"
+	// "errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -26,7 +28,7 @@ var validate = validator.New()
 
 var (
 	userCollection *mongo.Collection = config.DB.Collection("users")
-	jwtSecret                       = []byte(getEnv("JWT_SECRET", "your-secret-key-change-this"))
+	jwtSecret                        = []byte(getEnv("JWT_SECRET", "your-secret-key-change-this"))
 )
 
 // Helper function to get environment variable with fallback
@@ -311,13 +313,13 @@ func RegisterUser(c *gin.Context) {
 	// Create new user
 	now := time.Now()
 	user := models.User{
-		FirstName:   req.FirstName,
-		LastName:    req.LastName,
-		Email:       req.Email,
-		Password:    hashedPassword,
-		IsActive:    true,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+		Password:  hashedPassword,
+		IsActive:  true,
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 
 	// Insert user into database
