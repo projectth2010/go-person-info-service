@@ -2,17 +2,17 @@
 package main
 
 import (
-    "log"
-    "os"
-    "time"
+	"log"
+	"os"
 
-    "github.com/joho/godotenv"
-    "github.com/gin-gonic/gin"
-    swaggerFiles "github.com/swaggo/files"
-    ginSwagger "github.com/swaggo/gin-swagger"
-    "go-person-info-service/config"
-    "go-person-info-service/middleware"
-    "go-person-info-service/routes"
+	"go-person-info-service/config"
+	"go-person-info-service/middleware"
+	"go-person-info-service/routes"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // @title Person Information Service API
@@ -24,40 +24,41 @@ import (
 // @in header
 // @name Authorization
 func main() {
-    // Load .env file
-    if err := godotenv.Load(); err != nil {
-        log.Println("No .env file found, using environment variables")
-    }
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using environment variables")
+	}
 
-    // Initialize Gin
-    app := gin.Default()
+	// Initialize Gin
+	app := gin.Default()
 
-    // Middleware
-    app.Use(gin.Logger())
-    app.Use(gin.Recovery())
-    app.Use(middleware.CORSMiddleware())
+	// Middleware
+	app.Use(gin.Logger())
+	app.Use(gin.Recovery())
+	app.Use(middleware.CORSMiddleware())
 
-    // Connect to database
-    if err := config.ConnectDB(); err != nil {
-        log.Fatalf("Failed to connect to database: %v", err)
-    }
+	// Connect to database
+	if err := config.ConnectDB(); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
 
-    // Setup routes
-    routes.SetupRoutes(app)
+	// Setup routes
+	routes.UserRoutes(app)
+	// routes.SetupRoutes(app)
 
-    // Swagger documentation
-    if os.Getenv("ENABLE_SWAGGER") != "false" {
-        app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-    }
+	// Swagger documentation
+	if os.Getenv("ENABLE_SWAGGER") != "false" {
+		app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 
-    // Start server
-    port := os.Getenv("PORT")
-    if port == "" {
-        port = "8080"
-    }
+	// Start server
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 
-    log.Printf("Server starting on port %s...", port)
-    if err := app.Run(":" + port); err != nil {
-        log.Fatalf("Failed to start server: %v", err)
-    }
+	log.Printf("Server starting on port %s...", port)
+	if err := app.Run(":" + port); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
